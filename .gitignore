@@ -12,6 +12,9 @@ node_modules/
 *.tfstate
 *.tfstate.*
 *.tfplan
+# Contient une IP personnelle (admin_cidr_blocks) : chacun crée le sien à partir
+# de terraform.tfvars.example plutôt que de partager une valeur personnelle.
+terraform.tfvars
 crash.log
 override.tf
 override.tf.json

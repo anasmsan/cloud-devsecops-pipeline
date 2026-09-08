@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
 - ../../base
+- networkpolicy-public.yaml
 
 # En dev, on garde peu de répliques (coût, rapidité de déploiement).
 replicas:
@@ -19,3 +20,16 @@ images:
 - name: PLACEHOLDER_IMAGE
   newName: PLACEHOLDER_ECR_REPO
   newTag: PLACEHOLDER_TAG
+
+# Exposition publique temporaire pour la démo (voir k8s/examples/ingress-example.yaml
+# pour l'approche recommandée en production, via Ingress + AWS Load Balancer Controller).
+# Ici on reste simple : un Service de type LoadBalancer suffit pour obtenir une adresse
+# publique directement gérée par AWS, sans installer de composant supplémentaire.
+patches:
+- patch: |-
+    - op: replace
+      path: /spec/type
+      value: LoadBalancer
+  target:
+    kind: Service
+    name: demo-service

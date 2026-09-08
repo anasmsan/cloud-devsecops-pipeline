@@ -149,7 +149,8 @@ figcaption { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 9pt; c
 <li><span class="num">13.</span><a href="#s13">Le lien avec ton CV, phrase par phrase</a></li>
 <li><span class="num">14.</span><a href="#s14">Limites du projet et pistes d'amélioration réelles</a></li>
 <li><span class="num">15.</span><a href="#s15">Questions probables en entretien + éléments de réponse</a></li>
-<li><span class="num">16.</span><a href="#s16">Glossaire complet de tous les termes techniques</a></li>
+<li><span class="num">16.</span><a href="#s16b">Le laboratoire en direct : exposition publique et auto-réparation</a></li>
+<li><span class="num">17.</span><a href="#s16">Glossaire complet de tous les termes techniques</a></li>
 </ul>
 </div>
 
@@ -802,15 +803,162 @@ R : Partie 14 — cite l'Ingress/Load Balancer et la haute disponibilité multi-
 </div>
 
 <!-- ================================================================ -->
-<div class="part" id="s16">
+<div class="part" id="s16b">
 <div class="part-number">Partie 16</div>
+<h1>Le laboratoire en direct : exposition publique et auto-réparation</h1>
+
+<p>Après la première vérification technique (Partie 9), une deuxième session de déploiement a
+été faite dans un but différent : <strong>rendre le concept tangible</strong>, en exposant
+l'application via un vrai lien public ouvrable dans un navigateur, et en démontrant en direct
+la capacité de Kubernetes à se réparer tout seul. Cette partie explique en détail chaque
+décision technique de cette session, pourquoi elle diffère de la première, et une troisième
+découverte réelle qui s'est produite en la démontant proprement.</p>
+
+<h2>16.1 Exposer l'application au monde entier : LoadBalancer vs ClusterIP vs Ingress</h2>
+<div class="box def"><span class="label">Rappel — les trois façons d'exposer un Service Kubernetes</span>
+<strong>ClusterIP</strong> (utilisé dans le déploiement de base, Partie 9) : une adresse IP
+valable uniquement <em>à l'intérieur</em> du cluster — invisible et injoignable depuis
+Internet. <strong>LoadBalancer</strong> : demande au fournisseur cloud (ici AWS) de créer un
+vrai répartiteur de charge public, avec une adresse joignable depuis Internet, dédié à ce seul
+Service. <strong>Ingress</strong> : un routeur HTTP plus évolué, capable de partager un seul
+point d'entrée public entre plusieurs applications selon le nom de domaine ou le chemin d'URL
+(voir <code>k8s/examples/ingress-example.yaml</code>, écrit mais non déployé dans ce projet).
+</div>
+
+<table>
+<tr><th>Approche</th><th>Avantage</th><th>Inconvénient</th><th>Utilisée quand</th></tr>
+<tr><td>ClusterIP</td><td>Gratuit, sécurisé par défaut (rien n'est exposé)</td><td>Inaccessible depuis l'extérieur</td><td>Communication interne entre services (le cas par défaut de ce projet)</td></tr>
+<tr><td><strong>LoadBalancer</strong></td><td>Simple : une seule ligne de configuration, AWS gère tout le reste</td><td>Un répartiteur de charge par Service (coûteux si on a beaucoup de services), pas de routage par nom de domaine</td><td><strong>Choisi ici</strong> : une seule application à exposer, pour une démonstration courte</td></tr>
+<tr><td>Ingress</td><td>Un seul point d'entrée pour plusieurs applications, gestion fine du HTTPS</td><td>Demande d'installer et de configurer un contrôleur supplémentaire (AWS Load Balancer Controller), plus de pièces mobiles</td><td>Une vraie mise en production, avec plusieurs applications à exposer sous un même domaine</td></tr>
+</table>
+
+<div class="box remember"><span class="label">À retenir pour l'entretien</span>
+"J'ai choisi un Service de type LoadBalancer plutôt qu'un Ingress pour cette démonstration
+ponctuelle, en connaissance de cause : c'est la solution la plus simple quand on a une seule
+application à exposer rapidement, mais elle ne passe pas à l'échelle (un répartiteur de charge
+par application). Pour une vraie plateforme avec plusieurs services, j'aurais utilisé un
+Ingress avec l'AWS Load Balancer Controller, dont j'ai déjà écrit et documenté la configuration
+dans le dépôt sans la déployer, pour rester économe sur un test de quelques minutes."
+</div>
+
+<h2>16.2 Le piège oublié : la NetworkPolicy bloquait aussi le trafic public</h2>
+<div class="box warn"><span class="label">Un détail de sécurité facile à oublier</span>
+La <code>NetworkPolicy</code> de base de ce projet (<code>demo-service-allow</code>,
+Partie 6.3) n'autorise le trafic entrant que depuis des <em>pods</em> du même namespace
+(<code>podSelector: {}</code>). Une requête venant d'Internet via le LoadBalancer n'est
+justement <strong>pas</strong> émise par un pod du cluster — sans règle supplémentaire, elle
+aurait été bloquée exactement comme le pod de test inter-namespace de la Partie 10.1, alors
+même que le Service était bien de type <code>LoadBalancer</code> et techniquement joignable
+au niveau réseau AWS.
+</div>
+<p><strong>Correction :</strong> une <code>NetworkPolicy</code> additionnelle, spécifique à
+l'overlay de démonstration (<code>k8s/overlays/dev/networkpolicy-public.yaml</code>), autorise
+explicitement le trafic entrant depuis n'importe quelle adresse IP (<code>ipBlock: 0.0.0.0/0</code>)
+mais <strong>uniquement sur le port applicatif</strong> (8000) — jamais une ouverture totale.
+C'est un exemple concret du principe "tout refuser par défaut, autoriser explicitement" appliqué
+avec précision : on élargit l'accès seulement là où c'est voulu, sans toucher au reste de la
+posture de sécurité du namespace.</p>
+
+<h2>16.3 L'auto-réparation : comment Kubernetes sait qu'il doit recréer un pod</h2>
+<div class="box def"><span class="label">Définition — Boucle de réconciliation (control loop)</span>
+Le cœur de Kubernetes n'est pas une suite d'instructions ("fais ceci, puis cela"), mais une
+<strong>boucle sans fin</strong> qui compare en permanence deux choses : l'état
+<em>désiré</em> (ce que le fichier de configuration décrit — "je veux 2 répliques") et l'état
+<em>réel</em> observé sur le cluster. Dès qu'un écart apparaît entre les deux, un composant du
+control plane (le "ReplicaSet controller") agit immédiatement pour combler l'écart — sans
+qu'aucun humain n'ait à détecter le problème ni à déclencher une action corrective.
+</div>
+<p>C'est très différent d'un script traditionnel qui s'exécuterait une fois puis s'arrêterait :
+cette boucle tourne <strong>en continu</strong>, toute la durée de vie du cluster, prête à réagir
+à n'importe quel écart, qu'il soit causé par une panne matérielle, une commande malveillante, ou
+simplement le hasard.</p>
+
+<h3>16.3.1 Ce qui a été observé, avec les vrais chronomètres</h3>
+<table>
+<tr><th>Moment</th><th>Observation réelle</th></tr>
+<tr><td>T+0s</td><td>2 pods <code>Running</code> : <code>...5d9v5</code> et <code>...hmpf8</code></td></tr>
+<tr><td>T+0s</td><td>Commande <code>kubectl delete pod ...5d9v5 --force --grace-period=0</code> exécutée</td></tr>
+<tr><td>T+0s (immédiat)</td><td><code>kubectl get pods</code> montre déjà un nouveau pod <code>...lpmv4</code>, encore <code>0/1</code> (pas prêt)</td></tr>
+<tr><td>~T+15s</td><td><code>...lpmv4</code> est <code>1/1 Running</code> : entièrement opérationnel</td></tr>
+</table>
+<p>Le nouveau pod apparaît <strong>quasi instantanément</strong> (avant même la fin de la
+commande de suppression) : le ReplicaSet controller a détecté la disparition dès que l'API
+Kubernetes a confirmé la suppression, et a immédiatement demandé la création d'un remplaçant —
+il n'attend pas un intervalle de vérification périodique, il réagit à l'évènement.</p>
+
+<h3>16.3.2 Pourquoi <code>--force --grace-period=0</code> plutôt qu'une suppression normale ?</h3>
+<div class="box def"><span class="label">Définition — Arrêt propre (graceful shutdown)</span>
+Par défaut, Kubernetes laisse à un pod supprimé un délai de grâce (30 secondes typiquement)
+pour terminer proprement ce qu'il est en train de faire (finir de répondre à une requête en
+cours, fermer une connexion à une base de données) avant de l'arrêter réellement — un signal
+<code>SIGTERM</code> poli est envoyé d'abord, un <code>SIGKILL</code> brutal seulement en
+dernier recours.
+</div>
+<p>La commande utilisée dans cette démonstration (<code>--force --grace-period=0</code>)
+court-circuite volontairement cette politesse, pour simuler le pire scénario réaliste : un
+serveur qui s'éteint d'un coup, sans le moindre préavis (coupure électrique, crash noyau...).
+C'est un test plus exigeant qu'un arrêt propre — et le système s'en est très bien remis.</p>
+
+<h2>16.4 Ce que cette démonstration ne prouve PAS (honnêteté technique)</h2>
+<div class="box warn"><span class="label">Les limites réelles de cette protection</span>
+Cette auto-réparation protège contre la perte d'<strong>un pod</strong>, tant qu'il reste au
+moins un nœud disponible pour en recréer un autre. Elle ne protège pas, telle quelle, contre :
+la perte du <strong>nœud entier</strong> (ce cas est en réalité aussi couvert par EKS via le
+"node group" qui remplace un nœud EC2 disparu, mais avec un délai plus long, de l'ordre de la
+minute) ; la perte de <strong>données</strong> si l'application stockait un état local sans
+volume persistant (notre application de démo est "stateless" — sans état à perdre, ce qui
+simplifie tout) ; ou une <strong>erreur dans le code de l'application elle-même</strong>, qui
+serait fidèlement recréée à l'identique dans chaque nouveau pod.
+</div>
+<div class="box remember"><span class="label">À retenir pour l'entretien</span>
+"Je sais expliquer non seulement ce que Kubernetes apporte, mais aussi ce qu'il n'apporte pas
+tout seul : l'auto-réparation gère la disponibilité face à des pannes d'infrastructure, pas les
+bugs applicatifs ni la perte de données d'un service avec état. Une candidature honnête sur ses
+limites vaut mieux qu'une promesse de solution magique à tout."
+</div>
+
+<h2>16.5 Troisième découverte réelle : le LoadBalancer n'est pas une ressource Terraform</h2>
+<div class="box bug"><span class="label">Un piège de démantèlement découvert en détruisant l'infrastructure</span>
+Le Service Kubernetes de type <code>LoadBalancer</code> déclenche la création d'un vrai
+répartiteur de charge AWS (Network Load Balancer) — mais cette ressource n'existe nulle part
+dans le code Terraform : elle a été créée directement par un composant du cluster (le
+"cloud-controller-manager") qui parle à l'API AWS pour le compte de Kubernetes. Résultat :
+<code>terraform destroy</code> ne sait absolument pas qu'elle existe, et ne l'aurait
+<strong>jamais</strong> supprimée — un vrai risque de "ressource fantôme" qui continuerait à
+être facturée indéfiniment après une destruction pourtant réussie en apparence.
+</div>
+<p><strong>Ordre correct des opérations, appliqué dans ce projet :</strong></p>
+<ol>
+<li><code>kubectl delete -k k8s/overlays/dev</code> — supprime le Service Kubernetes, ce qui
+déclenche automatiquement la suppression du vrai LoadBalancer AWS par le cloud-controller-manager.</li>
+<li><strong>Vérification indépendante</strong> auprès d'AWS (<code>aws elbv2 describe-load-balancers</code>)
+que le répartiteur de charge a bien disparu, avant de continuer.</li>
+<li><code>terraform destroy</code> — peut alors supprimer le VPC et ses sous-réseaux sans
+rencontrer de dépendance bloquante (un VPC ne peut pas être supprimé tant qu'une ressource,
+même non gérée par Terraform, y fait encore référence).</li>
+</ol>
+<div class="box remember"><span class="label">À retenir pour l'entretien — une règle générale précieuse</span>
+"J'ai appris une règle qui dépasse ce seul projet : tout ce que Kubernetes crée dynamiquement
+dans le cloud sous-jacent (LoadBalancers, volumes de stockage persistants...) échappe à l'état
+Terraform et doit être nettoyé <em>avant</em> de lancer un `terraform destroy`, sous peine de
+laisser une ressource orpheline qui continue à coûter de l'argent silencieusement. Je vérifie
+maintenant systématiquement, après toute destruction, directement auprès du fournisseur cloud,
+plutôt que de faire confiance au seul message de succès de l'outil."
+</div>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s16">
+<div class="part-number">Partie 17</div>
 <h1>Glossaire complet de tous les termes techniques</h1>
 
 <dl class="glossaire">
 <dt>Add-on (EKS)</dt><dd>Composant logiciel géré du cluster (ex: vpc-cni, coredns), dont AWS peut gérer la version et la configuration.</dd>
 <dt>AWS (Amazon Web Services)</dt><dd>Plateforme de cloud computing d'Amazon.</dd>
 <dt>Backend (Terraform)</dt><dd>L'endroit où Terraform stocke son fichier d'état — ici, un bucket S3 distant plutôt qu'un fichier local.</dd>
+<dt>Boucle de réconciliation (control loop)</dt><dd>Mécanisme central de Kubernetes qui compare en continu l'état désiré (la configuration) à l'état réel du cluster, et corrige automatiquement tout écart entre les deux.</dd>
 <dt>CI/CD</dt><dd>Intégration Continue / Déploiement Continu : automatisation des tests et de la mise en production à chaque changement de code.</dd>
+<dt>Cloud-controller-manager</dt><dd>Composant du control plane Kubernetes qui traduit certaines ressources (ex: un Service de type LoadBalancer) en véritables ressources chez le fournisseur cloud sous-jacent — d'où le fait qu'un LoadBalancer AWS créé ainsi n'apparaît jamais dans l'état Terraform.</dd>
 <dt>Cluster (Kubernetes)</dt><dd>L'ensemble formé par le control plane et les nœuds qui font tourner les applications.</dd>
 <dt>CNI (Container Network Interface)</dt><dd>Le composant qui gère la mise en réseau des pods dans un cluster Kubernetes.</dd>
 <dt>Conteneur</dt><dd>Environnement d'exécution isolé et reproductible embarquant une application et ses dépendances.</dd>
@@ -820,12 +968,14 @@ R : Partie 14 — cite l'Ingress/Load Balancer et la haute disponibilité multi-
 <dt>ECR (Elastic Container Registry)</dt><dd>Service AWS de stockage d'images Docker.</dd>
 <dt>EKS (Elastic Kubernetes Service)</dt><dd>Service AWS de cluster Kubernetes managé.</dd>
 <dt>État Terraform (state)</dt><dd>Fichier qui fait correspondre le code Terraform aux ressources cloud réellement créées.</dd>
+<dt>Grace period (délai de grâce)</dt><dd>Temps laissé à un pod pour s'arrêter proprement (SIGTERM) avant d'être tué de force (SIGKILL) ; 30 secondes par défaut, réductible à 0 pour simuler une panne brutale.</dd>
 <dt>HPA (HorizontalPodAutoscaler)</dt><dd>Ajuste automatiquement le nombre de répliques d'un Deployment selon une métrique de charge.</dd>
 <dt>IaC (Infrastructure as Code)</dt><dd>Décrire l'infrastructure dans des fichiers versionnés plutôt que de la configurer manuellement.</dd>
 <dt>IAM (Identity and Access Management)</dt><dd>Service AWS de gestion des identités et des permissions.</dd>
 <dt>Ingress (Kubernetes)</dt><dd>Ressource qui expose un service à l'extérieur du cluster, généralement via un load balancer.</dd>
 <dt>Kubernetes</dt><dd>Système d'orchestration qui gère automatiquement des conteneurs sur plusieurs machines.</dd>
 <dt>Kustomize</dt><dd>Outil qui permet de décliner une configuration Kubernetes de base en plusieurs variantes par environnement.</dd>
+<dt>LoadBalancer (type de Service)</dt><dd>Type de Service Kubernetes qui demande au fournisseur cloud de créer un vrai répartiteur de charge public pour cette application.</dd>
 <dt>Module (Terraform)</dt><dd>Bloc de code Terraform réutilisable, souvent partagé par la communauté (ex: module VPC).</dd>
 <dt>Namespace (Kubernetes)</dt><dd>Espace de noms qui isole logiquement des ressources au sein d'un même cluster.</dd>
 <dt>NAT Gateway</dt><dd>Composant réseau qui permet à des machines dans un sous-réseau privé d'accéder à Internet sans y être directement exposées.</dd>
@@ -833,9 +983,12 @@ R : Partie 14 — cite l'Ingress/Load Balancer et la haute disponibilité multi-
 <dt>Node (Kubernetes)</dt><dd>Une machine qui fait réellement tourner des pods.</dd>
 <dt>Pod</dt><dd>La plus petite unité déployable dans Kubernetes, contenant un ou plusieurs conteneurs.</dd>
 <dt>Pod Security Standard</dt><dd>Fonctionnalité native de Kubernetes qui peut refuser la création de pods ne respectant pas un niveau de sécurité donné.</dd>
+<dt>ReplicaSet</dt><dd>Ressource Kubernetes (généralement gérée automatiquement par un Deployment) chargée de maintenir en permanence le nombre exact de répliques d'un pod souhaité.</dd>
 <dt>SAST (Static Application Security Testing)</dt><dd>Analyse du code source à la recherche de failles, sans l'exécuter.</dd>
 <dt>Service (Kubernetes)</dt><dd>Adresse réseau stable qui redirige vers les pods actuellement disponibles.</dd>
+<dt>SIGTERM / SIGKILL</dt><dd>Deux signaux Unix pour arrêter un processus : SIGTERM demande poliment un arrêt propre, SIGKILL tue immédiatement sans possibilité de nettoyage.</dd>
 <dt>Spot (instance)</dt><dd>Capacité de calcul AWS louée à prix réduit, avec le risque qu'elle soit récupérée par AWS avec un court préavis — adapté aux charges non-critiques.</dd>
+<dt>Stateless (sans état)</dt><dd>Se dit d'une application qui ne conserve aucune donnée localement entre deux requêtes — la perdre et la recréer ne fait perdre aucune information.</dd>
 <dt>Terraform</dt><dd>Outil d'infrastructure-as-code multi-fournisseurs cloud.</dd>
 <dt>Trivy</dt><dd>Outil de scan de vulnérabilités pour les images de conteneurs et le code.</dd>
 <dt>VPC (Virtual Private Cloud)</dt><dd>Réseau privé virtuel isolé au sein du cloud d'un fournisseur.</dd>
