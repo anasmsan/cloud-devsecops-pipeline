@@ -1,0 +1,24 @@
+.venv-tools/
+.venv-app/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+node_modules/
+.gitlab-ci-local/
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Kubeconfig téléchargé localement (contient un certificat client, jamais versionné)
+kubeconfig*

@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../base
+
+# En dev, on garde peu de répliques (coût, rapidité de déploiement).
+replicas:
+- count: 1
+  name: demo-service
+
+configMapGenerator:
+- behavior: merge
+  literals:
+  - APP_VERSION=dev
+  name: demo-config
+
+images:
+- name: PLACEHOLDER_IMAGE
+  newName: PLACEHOLDER_ECR_REPO
+  newTag: PLACEHOLDER_TAG

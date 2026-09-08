@@ -1,0 +1,43 @@
+# Par défaut, dans Kubernetes, tous les pods peuvent parler à tous les autres
+# pods du cluster, quel que soit leur namespace — un peu comme si toutes les
+# machines d'un réseau d'entreprise pouvaient se joindre sans aucun pare-feu.
+# Cette NetworkPolicy applique le principe de moindre privilège au niveau
+# réseau : tout est refusé par défaut, puis on autorise explicitement
+# seulement ce qui est nécessaire.
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+spec:
+  podSelector: {} # s'applique à tous les pods du namespace
+  policyTypes: ["Ingress", "Egress"]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: demo-service-allow
+spec:
+  podSelector:
+    matchLabels:
+      app: demo-service
+  policyTypes: ["Ingress", "Egress"]
+  ingress:
+    # Autorise uniquement le trafic entrant venant d'autres pods du même
+    # namespace (ex: un futur port-forward de debug, ou un autre service
+    # interne) — pas depuis d'autres namespaces du cluster.
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8000
+  egress:
+    # Résolution DNS (nécessaire pour absolument tout, y compris les appels
+    # HTTPS sortants).
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

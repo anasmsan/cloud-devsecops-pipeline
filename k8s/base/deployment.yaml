@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-service
+  labels:
+    app: demo-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo-service
+  template:
+    metadata:
+      labels:
+        app: demo-service
+    spec:
+      # Sécurité au niveau du pod : appliquée en plus (pas à la place) de
+      # celle du conteneur ci-dessous — défense en profondeur.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+
+      # Ce pod n'a besoin d'appeler ni l'API Kubernetes ni aucune AWS API :
+      # ne pas lui monter de token de service account du tout, plutôt que de
+      # lui donner un token qu'il n'utilisera jamais (surface d'attaque inutile
+      # en cas de compromission du conteneur).
+      automountServiceAccountToken: false
+
+      containers:
+        - name: demo-service
+          image: PLACEHOLDER_IMAGE # remplacé par kustomize (voir overlays/*/kustomization.yaml)
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 8000
+              name: http
+
+          envFrom:
+            - configMapRef:
+                name: demo-config
+
+          # Limite ce que le conteneur peut faire au niveau Linux, même s'il
+          # est compromis par une vulnérabilité applicative : pas de droits
+          # racine, pas de possibilité d'écrire sur le système de fichiers de
+          # l'image, pas d'élévation de privilèges, aucune capacité Linux
+          # superflue conservée.
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+
+          # /tmp doit rester inscriptible (uvicorn/Python en ont besoin) même
+          # avec un système de fichiers racine en lecture seule.
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+          # "requests" = ce qui est réservé pour ce pod (utilisé par le
+          # scheduler pour décider où le placer) ; "limits" = le plafond dur
+          # au-delà duquel le conteneur est bridé (CPU) ou tué (mémoire, OOM).
+          # Sans ça, un pod qui fuit de la mémoire pourrait affamer tous les
+          # autres pods du même nœud.
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+
+          # readinessProbe : ne reçoit du trafic que si /health répond —
+          # évite d'envoyer des requêtes à un pod encore en train de démarrer.
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 2
+            periodSeconds: 5
+
+          # livenessProbe : si /health ne répond plus (deadlock, process
+          # bloqué), Kubernetes redémarre automatiquement le conteneur.
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+      volumes:
+        - name: tmp
+          emptyDir: {}

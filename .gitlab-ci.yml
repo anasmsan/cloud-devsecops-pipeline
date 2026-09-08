@@ -1,0 +1,177 @@
+# Pipeline GitLab CI/CD — build, tests, contrôles de sécurité (SAST, secrets,
+# dépendances, conteneur, infrastructure-as-code), puis déploiement Kubernetes.
+#
+# Principe directeur : "shift left" — chaque contrôle de sécurité tourne le
+# plus tôt possible dans le pipeline, avant même de construire l'image Docker,
+# pour échouer vite et ne jamais laisser un problème de sécurité atteindre un
+# environnement réel. Un déploiement en production nécessite en plus une
+# validation humaine explicite (voir le job deploy-prod, `when: manual`).
+
+stages:
+  - lint
+  - test
+  - security-code
+  - build
+  - security-artifact
+  - deploy
+
+variables:
+  AWS_REGION: eu-west-3
+  ECR_REPOSITORY: devsecops-demo-app
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+
+# --- LINT ---
+
+lint:terraform:
+  stage: lint
+  image: hashicorp/terraform:1.9
+  script:
+    - terraform fmt -check -recursive terraform/
+  rules:
+    - changes: ["terraform/**/*"]
+
+lint:dockerfile:
+  stage: lint
+  image: hadolint/hadolint:latest-debian
+  script:
+    - hadolint app/Dockerfile
+  rules:
+    - changes: ["app/Dockerfile"]
+
+# --- TEST ---
+
+test:app:
+  stage: test
+  image: python:3.12-slim
+  script:
+    - cd app
+    - pip install -r requirements.txt pytest httpx
+    - python -m pytest test_main.py -v --junitxml=report.xml
+  artifacts:
+    reports:
+      junit: app/report.xml
+
+# --- SÉCURITÉ DU CODE (avant même de construire quoi que ce soit) ---
+
+security:secrets:
+  stage: security-code
+  image:
+    name: zricethezav/gitleaks:latest
+    entrypoint: [""] # l'image fixe son ENTRYPOINT sur le binaire gitleaks lui-même ;
+                      # on le neutralise pour pouvoir exécuter notre propre commande shell
+  script:
+    - gitleaks detect --source . --no-git --config .gitleaks.toml --redact
+
+security:sast:
+  stage: security-code
+  image: semgrep/semgrep:latest
+  script:
+    - semgrep --config auto app/ --error
+
+security:iac:
+  stage: security-code
+  image:
+    name: aquasec/tfsec:latest
+    entrypoint: [""]
+  script:
+    # HIGH/CRITICAL uniquement : les findings MEDIUM/LOW acceptés sont
+    # documentés dans SECURITY_EXCEPTIONS.md et ne doivent pas bloquer le pipeline.
+    - tfsec terraform/ --minimum-severity HIGH --no-color
+
+# --- BUILD ---
+
+build:image:
+  stage: build
+  image: docker:27
+  services:
+    - docker:27-dind
+  before_script:
+    # Authentification à ECR sans jamais écrire de mot de passe en dur : le
+    # jeton est demandé à AWS à la volée et n'est valable que 12h.
+    - apk add --no-cache aws-cli
+    - aws ecr get-login-password --region $AWS_REGION |
+      docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+  script:
+    - docker build -t $ECR_REPOSITORY:$IMAGE_TAG --build-arg APP_VERSION=$IMAGE_TAG app/
+    - docker tag $ECR_REPOSITORY:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+    - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# --- SÉCURITÉ DE L'ARTEFACT CONSTRUIT ---
+
+security:container-scan:
+  stage: security-artifact
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  needs: ["build:image"]
+  script:
+    - trivy image --severity CRITICAL,HIGH
+        --ignore-unfixed
+        --exit-code 1
+        $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+render:k8s-manifests:
+  stage: security-artifact
+  image: alpine/k8s:1.31.0
+  script:
+    # `kubectl kustomize` intègre Kustomize nativement depuis kubectl 1.14 :
+    # pas besoin d'installer un binaire séparé juste pour rendre les manifestes.
+    - kubectl kustomize k8s/overlays/dev > rendered-dev.yaml
+  artifacts:
+    paths: ["rendered-dev.yaml"]
+    expire_in: 1 hour
+
+security:k8s-manifests:
+  stage: security-artifact
+  image:
+    name: bridgecrew/checkov:latest
+    entrypoint: [""]
+  needs: ["render:k8s-manifests"]
+  script:
+    - checkov -f rendered-dev.yaml --compact --quiet --skip-check CKV_K8S_43
+
+# --- DÉPLOIEMENT ---
+
+.deploy_template: &deploy_template
+  # Image communautaire qui regroupe kubectl + aws-cli + kustomize + helm,
+  # plutôt que d'assembler soi-même plusieurs `apt/apk add` fragiles d'une
+  # image à l'autre (voir les remarques plus haut sur les ENTRYPOINT figés
+  # des images de sécurité minimalistes : ici au contraire, une image outillée
+  # avec un vrai shell simplifie honnêtement le job).
+  image: alpine/k8s:1.31.0
+  before_script:
+    - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
+
+deploy:dev:
+  <<: *deploy_template
+  stage: deploy
+  environment:
+    name: dev
+  script:
+    - cd k8s/overlays/dev
+    - kustomize edit set image PLACEHOLDER_IMAGE=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+    - kubectl apply -k .
+    - kubectl rollout status deployment/demo-service -n devsecops-demo --timeout=120s
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+deploy:prod:
+  <<: *deploy_template
+  stage: deploy
+  environment:
+    name: prod
+  script:
+    - cd k8s/overlays/prod
+    - kustomize edit set image PLACEHOLDER_IMAGE=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+    - kubectl apply -k .
+    - kubectl rollout status deployment/demo-service -n devsecops-demo --timeout=120s
+  rules:
+    # Déploiement en production toujours déclenché manuellement par un humain
+    # dans l'interface GitLab, jamais automatiquement : aucun mécanisme de
+    # sécurité ne remplace une validation humaine avant un déploiement critique.
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual

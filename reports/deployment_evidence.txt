@@ -1,0 +1,45 @@
+=== kubectl get nodes ===
+NAME                                       STATUS   ROLES    AGE   VERSION                INTERNAL-IP   EXTERNAL-IP   OS-IMAGE                        KERNEL-VERSION                    CONTAINER-RUNTIME
+ip-10-42-2-32.eu-west-3.compute.internal   Ready    <none>   20m   v1.31.14-eks-cb19647   10.42.2.32    <none>        Amazon Linux 2023.12.20260817   6.1.180-225.360.amzn2023.x86_64   containerd://2.2.5+unknown
+
+=== kubectl get all -n devsecops-demo ===
+NAME                                READY   STATUS    RESTARTS   AGE
+pod/demo-service-6d966d64b8-6jksg   1/1     Running   0          8m50s
+pod/demo-service-6d966d64b8-9zlrz   1/1     Running   0          8m47s
+
+NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+service/demo-service   ClusterIP   172.20.134.79   <none>        80/TCP    18m
+
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/demo-service   2/2     2            2           18m
+
+NAME                                      DESIRED   CURRENT   READY   AGE
+replicaset.apps/demo-service-56d9c55db8   0         0         0       14m
+replicaset.apps/demo-service-6d966d64b8   2         2         2       8m51s
+replicaset.apps/demo-service-9c7b5c499    0         0         0       18m
+
+NAME                                               REFERENCE                 TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/demo-service   Deployment/demo-service   cpu: 4%/70%   2         5         2          18m
+
+=== kubectl get networkpolicy -n devsecops-demo ===
+NAME                 POD-SELECTOR       AGE
+default-deny-all     <none>             18m
+demo-service-allow   app=demo-service   18m
+
+=== kubectl get policyendpoints -n devsecops-demo ===
+NAME                       AGE
+default-deny-all-wpwr2     2m28s
+demo-service-allow-k257l   2m28s
+
+=== kubectl top pods -n devsecops-demo ===
+NAME                            CPU(cores)   MEMORY(bytes)   
+demo-service-6d966d64b8-6jksg   2m           38Mi            
+demo-service-6d966d64b8-9zlrz   2m           38Mi            
+
+=== kubectl get hpa -n devsecops-demo ===
+NAME           REFERENCE                 TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+demo-service   Deployment/demo-service   cpu: 4%/70%   2         5         2          18m
+
+=== Sécurité du pod (exec id + test lecture seule) ===
+uid=10001(appuser) gid=10001(appuser) groups=10001(appuser)
+touch: cannot touch '/test': Read-only file system

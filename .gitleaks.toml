@@ -1,0 +1,9 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Dépendances tierces téléchargées, jamais commitées (voir .gitignore)"
+paths = [
+  '''.*\.terraform/.*''',
+  '''.*\.terraform\.lock\.hcl''',
+]

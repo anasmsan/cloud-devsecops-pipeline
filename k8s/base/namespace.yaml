@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: devsecops-demo
+  labels:
+    # Le "Pod Security Standard" natif de Kubernetes (depuis la v1.25) refuse
+    # au niveau du cluster tout pod qui ne respecte pas le profil "restricted"
+    # (pas de root, pas de privilège étendu, capacités Linux minimales...) —
+    # une deuxième barrière indépendante du contenu du Deployment lui-même :
+    # même une erreur de configuration future dans le Deployment serait
+    # rejetée par le cluster, pas seulement "déconseillée".
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest

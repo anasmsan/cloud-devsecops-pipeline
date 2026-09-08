@@ -1,0 +1,4 @@
+aws_region        = "eu-west-3"
+project_name      = "devsecops-demo"
+# Récupérer sa propre IP publique avec : curl -s https://checkip.amazonaws.com
+admin_cidr_blocks = ["203.0.113.10/32"]

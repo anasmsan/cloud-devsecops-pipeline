@@ -1,0 +1,35 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+replicas:
+  - name: demo-service
+    count: 3
+
+configMapGenerator:
+  - name: demo-config
+    behavior: merge
+    literals:
+      - APP_VERSION=prod
+
+images:
+  - name: PLACEHOLDER_IMAGE
+    newName: PLACEHOLDER_ECR_REPO
+    newTag: PLACEHOLDER_TAG
+
+patches:
+  - target:
+      kind: Deployment
+      name: demo-service
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
