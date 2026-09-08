@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Rapport explicatif</title>
+<style>
+@page {
+    size: A4;
+    margin: 2.2cm 2cm 2.4cm 2cm;
+    @bottom-center {
+        content: counter(page);
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        font-size: 9pt;
+        color: #666;
+    }
+}
+@page cover {
+    margin: 0;
+    @bottom-center { content: none; }
+}
+* { box-sizing: border-box; }
+body {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #1a1a1a;
+}
+h1, h2, h3, h4 {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #0b3d5c;
+    line-height: 1.25;
+}
+.cover {
+    page: cover;
+    page-break-after: always;
+    height: 27.7cm;
+    background: linear-gradient(160deg, #14213d 0%, #1f3a5f 45%, #c1580f 130%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 3cm;
+}
+.cover .kicker {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-size: 11pt;
+    opacity: 0.85;
+    margin-bottom: 1.2cm;
+}
+.cover h1 {
+    color: white;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 28pt;
+    max-width: 16cm;
+    margin: 0 0 0.8cm 0;
+}
+.cover .subtitle {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 13pt;
+    opacity: 0.9;
+    max-width: 13cm;
+    margin-bottom: 2.5cm;
+}
+.cover .stack {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 10.5pt;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 8px;
+    padding: 0.5cm 0.9cm;
+}
+.part { page-break-before: always; }
+.part-number {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #c1580f;
+    font-size: 10.5pt;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 0.1cm;
+}
+h1 { font-size: 20pt; border-bottom: 3px solid #c1580f; padding-bottom: 0.2cm; margin-top: 0; }
+h2 { font-size: 14.5pt; margin-top: 1cm; border-left: 5px solid #c1580f; padding-left: 0.3cm; }
+h3 { font-size: 12.5pt; color: #1f3a5f; margin-top: 0.7cm; }
+p { text-align: justify; margin: 0.4cm 0; }
+strong { color: #0b3d5c; }
+code, pre { font-family: 'SF Mono', Consolas, Monaco, monospace; font-size: 9.3pt; }
+pre {
+    background: #f4f6f8; border: 1px solid #dde3e8; border-left: 4px solid #c1580f;
+    border-radius: 4px; padding: 0.35cm 0.5cm; overflow-x: auto;
+    white-space: pre-wrap; word-wrap: break-word;
+}
+code { background: #f0f2f4; padding: 1px 4px; border-radius: 3px; }
+table { border-collapse: collapse; width: 100%; margin: 0.4cm 0; font-size: 10pt; }
+th, td { border: 1px solid #d5dbe0; padding: 0.18cm 0.3cm; text-align: left; }
+th { background: #14213d; color: white; font-family: 'Helvetica Neue', Arial, sans-serif; }
+tr:nth-child(even) { background: #f6f8fa; }
+.box { border-radius: 6px; padding: 0.35cm 0.5cm; margin: 0.5cm 0; font-size: 10.3pt; }
+.def { background: #eef2fb; border-left: 5px solid #1f3a5f; }
+.def .label { font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: bold; color: #1f3a5f; display:block; margin-bottom:0.15cm;}
+.warn { background: #fff6ea; border-left: 5px solid #d98324; }
+.warn .label { font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: bold; color: #8a5a13; display:block; margin-bottom:0.15cm;}
+.remember { background: #eef8ee; border-left: 5px solid #3f8a3f; }
+.remember .label { font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: bold; color: #2c632c; display:block; margin-bottom:0.15cm;}
+.cv-link { background: #fdeee3; border-left: 5px solid #c1580f; }
+.cv-link .label { font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: bold; color: #9c470c; display:block; margin-bottom:0.15cm;}
+.bug { background: #fdecec; border-left: 5px solid #c0392b; }
+.bug .label { font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: bold; color: #96281b; display:block; margin-bottom:0.15cm;}
+figure { margin: 0.5cm 0; text-align: center; }
+figure img { max-width: 95%; border: 1px solid #ddd; border-radius: 4px; }
+figcaption { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 9pt; color: #555; margin-top: 0.15cm; }
+.toc { list-style: none; padding-left: 0; font-family: 'Helvetica Neue', Arial, sans-serif; }
+.toc li { margin: 0.25cm 0; }
+.toc a { text-decoration: none; color: #0b3d5c; }
+.toc .num { color: #c1580f; font-weight: bold; margin-right: 0.3cm; }
+.glossaire dt { font-weight: bold; color: #1f3a5f; font-family: 'Helvetica Neue', Arial, sans-serif; margin-top: 0.3cm;}
+.glossaire dd { margin-left: 0; margin-bottom: 0.2cm; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+    <div class="kicker">Rapport explicatif — pas à pas</div>
+    <h1>Déploiement Cloud &amp; DevSecOps</h1>
+    <div class="subtitle">Tout le projet expliqué de A à Z : les choix, les pourquoi, les
+    alternatives écartées, les vrais bugs trouvés en direct, et le lien avec chaque ligne de ton CV.</div>
+    <div class="stack">AWS · Terraform · Docker · Kubernetes · GitLab CI/CD</div>
+</div>
+
+<div class="part">
+<h1>Sommaire</h1>
+<ul class="toc">
+<li><span class="num">0.</span><a href="#s0">Comment lire ce rapport</a></li>
+<li><span class="num">1.</span><a href="#s1">Pourquoi ce projet est un excellent projet de portfolio</a></li>
+<li><span class="num">2.</span><a href="#s2">Vue d'ensemble de l'architecture</a></li>
+<li><span class="num">3.</span><a href="#s3">Les technologies : quoi, pourquoi, alternatives</a></li>
+<li><span class="num">4.</span><a href="#s4">Terraform et l'infrastructure-as-code expliqués en détail</a></li>
+<li><span class="num">5.</span><a href="#s5">Kubernetes expliqué depuis zéro</a></li>
+<li><span class="num">6.</span><a href="#s6">La sécurité du cluster Kubernetes</a></li>
+<li><span class="num">7.</span><a href="#s7">Le pipeline CI/CD GitLab, étape par étape</a></li>
+<li><span class="num">8.</span><a href="#s8">Les scans de sécurité automatisés</a></li>
+<li><span class="num">9.</span><a href="#s9">Le déploiement réel : ce qui a été fait, pour de vrai</a></li>
+<li><span class="num">10.</span><a href="#s10">Les deux vrais bugs trouvés et corrigés en direct</a></li>
+<li><span class="num">11.</span><a href="#s11">Maîtriser le coût d'une infrastructure cloud</a></li>
+<li><span class="num">12.</span><a href="#s12">Git et GitHub</a></li>
+<li><span class="num">13.</span><a href="#s13">Le lien avec ton CV, phrase par phrase</a></li>
+<li><span class="num">14.</span><a href="#s14">Limites du projet et pistes d'amélioration réelles</a></li>
+<li><span class="num">15.</span><a href="#s15">Questions probables en entretien + éléments de réponse</a></li>
+<li><span class="num">16.</span><a href="#s16">Glossaire complet de tous les termes techniques</a></li>
+</ul>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s0">
+<div class="part-number">Partie 0</div>
+<h1>Comment lire ce rapport</h1>
+<p>Même principe que pour tes deux précédents rapports (détection de fraude, API de
+paiement) : chaque notion est définie la première fois qu'elle apparaît, dans un encadré
+coloré.</p>
+<div class="box def"><span class="label">Définition</span>Bleu : définit un terme technique simplement, avec une analogie si possible.</div>
+<div class="box remember"><span class="label">À retenir pour l'entretien</span>Vert : une phrase à savoir répéter à l'oral.</div>
+<div class="box warn"><span class="label">Piège / erreur classique</span>Orange : une erreur fréquente, évitée ou expliquée ici.</div>
+<div class="box cv-link"><span class="label">Lien avec ton CV</span>Orange foncé : relie la section à ta phrase de CV ("Mise en place d'un pipeline CI/CD et déploiement d'une application conteneurisée avec contrôles de sécurité").</div>
+<div class="box bug"><span class="label">Vrai bug trouvé en direct</span>Rouge : ce projet est le seul des trois à avoir été <strong>réellement déployé sur un vrai compte AWS</strong>. Ces encadrés racontent les vrais problèmes rencontrés en le faisant tourner pour de vrai — et comment ils ont été diagnostiqués et corrigés. C'est probablement la partie la plus précieuse à raconter en entretien.</div>
+<p>Ce projet est different des deux précédents : il ne s'agit pas de construire une
+application, mais de construire <strong>l'infrastructure et l'automatisation</strong> qui
+permettent à n'importe quelle application (y compris celles des deux autres projets !) de
+tourner de façon fiable, sécurisée et reproductible dans le cloud.</p>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s1">
+<div class="part-number">Partie 1</div>
+<h1>Pourquoi ce projet est un excellent projet de portfolio</h1>
+
+<h2>1.1 Le problème que ce métier résout</h2>
+<p>Écrire une bonne application ne suffit pas : il faut aussi la faire tourner quelque part,
+de façon fiable, disponible, et sécurisée, tout en pouvant la mettre à jour plusieurs fois
+par jour sans tout casser. C'est le métier du <strong>DevOps</strong> (contraction de
+"Development" et "Operations") et de sa variante orientée sécurité, le
+<strong>DevSecOps</strong>.</p>
+
+<div class="box def"><span class="label">Définition — DevOps / DevSecOps</span>
+Le DevOps est une culture et un ensemble de pratiques qui rapprochent le développement
+logiciel (écrire le code) et l'exploitation (le faire tourner en production), notamment via
+l'automatisation (déployer en un clic plutôt qu'à la main) et l'infrastructure-as-code (décrire
+les serveurs comme du code, pas comme des clics dans une console). Le DevSecOps ajoute la
+sécurité comme responsabilité partagée à chaque étape de cette chaîne, plutôt que comme une
+vérification isolée à la toute fin.
+</div>
+
+<h2>1.2 Ce qui rend ce projet crédible</h2>
+<table>
+<tr><th>Caractéristique</th><th>Pourquoi c'est important</th></tr>
+<tr><td>Déployé pour de vrai</td><td>Sur un vrai compte AWS, pas une simulation. La majorité des projets de portfolio DevOps sur GitHub ne sont jamais réellement exécutés — celui-ci l'a été, preuves à l'appui dans <code>reports/</code>.</td></tr>
+<tr><td>Sécurité à chaque étape ("shift left")</td><td>Pas un scan de sécurité ajouté à la fin, mais intégré à chaque étape du pipeline : code, dépendances, image, infrastructure, manifestes Kubernetes.</td></tr>
+<tr><td>De vrais bugs trouvés et corrigés</td><td>Deux problèmes réels (Partie 10) découverts uniquement parce que le déploiement a été testé en conditions réelles, pas juste écrit puis supposé correct.</td></tr>
+<tr><td>Maîtrise du coût</td><td>Une vraie contrainte de production (le cloud coûte de l'argent à chaque heure) gérée activement : alertes de budget, instances Spot, destruction systématique après vérification.</td></tr>
+</table>
+
+<div class="box remember"><span class="label">À retenir pour l'entretien</span>
+"Ce projet a été réellement déployé sur AWS, pas juste écrit : j'ai créé un vrai cluster
+Kubernetes, déployé une vraie application dessus, vérifié la sécurité en conditions réelles, et
+détruit l'infrastructure ensuite pour maîtriser les coûts. En le faisant, j'ai découvert deux
+vrais problèmes que je n'aurais jamais trouvés en me contentant d'écrire le code — je peux les
+détailler si ça vous intéresse."
+</div>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s2">
+<div class="part-number">Partie 2</div>
+<h1>Vue d'ensemble de l'architecture</h1>
+
+<table>
+<tr><th>Composant</th><th>Fichier(s)</th><th>Rôle</th></tr>
+<tr><td>Application de démonstration</td><td><code>app/</code></td><td>Une API FastAPI minimale, volontairement simple : le sujet du projet est l'infrastructure autour, pas l'application elle-même</td></tr>
+<tr><td>État Terraform partagé</td><td><code>terraform/bootstrap/</code></td><td>Bucket S3 + table DynamoDB pour stocker et verrouiller l'état de l'infrastructure</td></tr>
+<tr><td>Infrastructure AWS</td><td><code>terraform/environments/dev/</code></td><td>VPC, cluster Kubernetes managé (EKS), registre d'images (ECR)</td></tr>
+<tr><td>Manifestes Kubernetes</td><td><code>k8s/base/</code> + <code>k8s/overlays/</code></td><td>Description de comment l'application doit tourner sur le cluster, avec des variantes par environnement (Kustomize)</td></tr>
+<tr><td>Pipeline d'automatisation</td><td><code>.gitlab-ci.yml</code></td><td>Enchaîne automatiquement tests, scans de sécurité, construction, et déploiement à chaque changement de code</td></tr>
+<tr><td>Scripts de démonstration</td><td><code>scripts/</code></td><td>Rejouent manuellement ce que le pipeline automatiserait, et installent les briques d'infrastructure du cluster (autoscaling)</td></tr>
+</table>
+
+<figure>
+<pre>flowchart TB
+    subgraph CI["Pipeline GitLab CI/CD"]
+        L[Lint] --> T[Tests] --> S1[Sécurité du code]
+        S1 --> B[Build image Docker]
+        B --> S2[Sécurité de l'artefact]
+        S2 --> D[Déploiement]
+    end
+    D --> ECR[(ECR)]
+    D --> EKS[Cluster EKS]
+    ECR --> EKS
+    subgraph AWS["VPC (eu-west-3)"]
+        EKS --> NG[Nœud Spot]
+        NG --> PODS[Pods de l'application]
+    end</pre>
+<figcaption>Schéma d'architecture (voir README.md pour la version illustrée)</figcaption>
+</figure>
+
+<div class="box remember"><span class="label">À retenir pour l'entretien</span>
+"Le pipeline suit le principe 'shift left' : chaque contrôle de sécurité tourne le plus tôt
+possible, avant même de construire l'image Docker. Si un problème est détecté au niveau du code
+source, on ne perd pas de temps à construire et déployer une image qu'on devra de toute façon
+rejeter."
+</div>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s3">
+<div class="part-number">Partie 3</div>
+<h1>Les technologies : quoi, pourquoi, et par rapport à quelles alternatives</h1>
+
+<h2>3.1 AWS (Amazon Web Services)</h2>
+<div class="box def"><span class="label">Définition — Cloud computing</span>
+Plutôt que d'acheter et de maintenir ses propres serveurs physiques, le "cloud computing"
+consiste à louer, à la demande et à l'usage, de la puissance de calcul, du stockage et des
+services chez un fournisseur (Amazon, Microsoft, Google...). On peut créer un serveur en
+quelques secondes et le détruire tout aussi vite — exactement ce qu'on a fait dans ce projet.
+</div>
+<p><strong>Alternative :</strong> Microsoft Azure, Google Cloud Platform (GCP) sont les deux
+autres grands fournisseurs. AWS a été choisi car c'est le plus utilisé en entreprise et celui
+qui a le plus d'offres gratuites pour débuter. Les concepts (VPC, cluster Kubernetes managé,
+registre d'images) existent sous des noms différents mais équivalents chez les trois
+(ex : GKE chez Google, AKS chez Microsoft, contre EKS chez AWS).</p>
+
+<h2>3.2 Terraform</h2>
+<p>Expliqué en détail en Partie 4.</p>
+<p><strong>Alternative écartée : AWS CloudFormation / AWS CDK.</strong> Ce sont les outils
+d'infrastructure-as-code propres à AWS. Terraform, lui, fonctionne avec tous les fournisseurs
+cloud (AWS, Azure, GCP...) avec le même langage — une compétence transférable, plutôt que
+liée à un seul fournisseur. C'est aussi l'outil le plus demandé sur le marché du travail
+DevOps actuellement.</p>
+
+<h2>3.3 Docker</h2>
+<p>Déjà expliqué en détail dans le rapport du projet "API de paiement sécurisée" (conteneurs,
+multi-stage build, utilisateur non-root). Les mêmes principes s'appliquent ici à l'application
+de démonstration.</p>
+
+<h2>3.4 Kubernetes</h2>
+<p>Expliqué en détail en Partie 5.</p>
+<p><strong>Alternative écartée : AWS ECS (Elastic Container Service).</strong> ECS est le
+système d'orchestration de conteneurs propre à AWS, plus simple à apprendre. Kubernetes est
+plus complexe, mais c'est le standard de facto de l'industrie, utilisé chez la quasi-totalité
+des grandes entreprises tech, et disponible chez tous les fournisseurs cloud (pas de
+dépendance à un seul fournisseur, contrairement à ECS) : une compétence Kubernetes se
+transfère d'une entreprise à l'autre, quel que soit leur fournisseur cloud.</p>
+
+<h2>3.5 GitLab CI/CD</h2>
+<div class="box def"><span class="label">Définition — CI/CD</span>
+<strong>CI</strong> (Intégration Continue) : à chaque changement de code, une machine
+exécute automatiquement les tests et les vérifications, plutôt que de faire confiance à
+chaque développeur pour le faire manuellement. <strong>CD</strong> (Déploiement Continu) :
+une fois les vérifications passées, le code est automatiquement mis en production (ou prêt à
+l'être). Ensemble, CI/CD élimine le geste manuel "je copie mon code sur le serveur", source
+classique d'erreurs humaines.
+</div>
+<p><strong>Alternative écartée : GitHub Actions, Jenkins.</strong> GitHub Actions est
+l'équivalent chez GitHub (utilisé pour les deux autres projets de ce portfolio, hébergés sur
+GitHub). GitLab CI/CD a été choisi ici spécifiquement car il est explicitement demandé par le
+type de poste visé ("GitLab CI/CD" dans l'offre), et c'est l'outil de CI/CD le plus utilisé en
+entreprise avec GitHub Actions et Jenkins (plus ancien, plus lourd à administrer soi-même).</p>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s4">
+<div class="part-number">Partie 4</div>
+<h1>Terraform et l'infrastructure-as-code expliqués en détail</h1>
+
+<h2>4.1 Le problème que Terraform résout</h2>
+<div class="box warn"><span class="label">Piège classique : configurer l'infrastructure "à la main"</span>
+Sans infrastructure-as-code, on configure les serveurs en cliquant dans la console AWS. Le
+problème : personne ne se souvient exactement de tous les clics effectués, impossible de
+recréer à l'identique la même infrastructure ailleurs (ex: pour un environnement de test), et
+aucune trace ni historique des changements (qui a changé quoi, quand, pourquoi).
+</div>
+<div class="box def"><span class="label">Définition — Infrastructure as Code (IaC)</span>
+L'infrastructure-as-code consiste à décrire l'infrastructure souhaitée (serveurs, réseaux,
+bases de données...) dans des fichiers texte versionnés (comme du code source normal), plutôt
+que de la configurer manuellement. Terraform lit ces fichiers et se charge de créer, modifier
+ou supprimer les ressources cloud correspondantes.
+</div>
+
+<h2>4.2 Les trois commandes fondamentales</h2>
+<table>
+<tr><th>Commande</th><th>Ce qu'elle fait</th></tr>
+<tr><td><code>terraform init</code></td><td>Télécharge les plugins nécessaires (ici : le plugin AWS, et les modules VPC/EKS de la communauté)</td></tr>
+<tr><td><code>terraform plan</code></td><td>Calcule et affiche ce qui <em>serait</em> changé, sans rien modifier réellement — l'équivalent d'une prévisualisation</td></tr>
+<tr><td><code>terraform apply</code></td><td>Applique réellement les changements calculés par le plan</td></tr>
+</table>
+<p>Dans ce projet, chaque <code>terraform apply</code> a été précédé d'un
+<code>terraform plan</code> relu avant de continuer — c'est la discipline de base pour ne
+jamais être surpris par ce qu'une commande va réellement faire sur un vrai compte cloud.</p>
+
+<h2>4.3 L'état Terraform (le fichier le plus important et le plus fragile)</h2>
+<div class="box def"><span class="label">Définition — État Terraform (state)</span>
+Terraform garde la trace de ce qu'il a créé dans un fichier appelé "état"
+(<code>terraform.tfstate</code>) : sans lui, il ne saurait pas que telle ressource AWS
+correspond à telle ligne de code, et ne pourrait ni la modifier ni la détruire proprement.
+</div>
+<div class="box warn"><span class="label">Piège évité : un état stocké seulement en local</span>
+Si le fichier d'état n'existe que sur l'ordinateur d'une seule personne, personne d'autre ne
+peut faire évoluer l'infrastructure sans risquer de créer un état incohérent (Terraform
+recréerait tout en pensant que rien n'existe). C'est pourquoi ce projet utilise un
+<strong>backend distant partagé</strong> : un bucket S3 stocke le fichier d'état (accessible à
+quiconque a les droits), et une table DynamoDB sert de verrou (empêche deux
+<code>terraform apply</code> simultanés de s'exécuter en même temps et de corrompre l'état).
+</div>
+<p>Ce backend distant est lui-même créé par un module Terraform séparé
+(<code>terraform/bootstrap/</code>), appliqué une seule fois, avec un état local — un cas
+particulier inévitable : il faut bien un premier bucket pour stocker l'état de tous les
+buckets suivants.</p>
+
+<h2>4.4 Utiliser des modules communautaires plutôt que tout réécrire</h2>
+<p>Ce projet utilise les modules Terraform officiels et largement utilisés
+<code>terraform-aws-modules/vpc/aws</code> et <code>terraform-aws-modules/eks/aws</code>
+plutôt que d'écrire chaque ressource AWS une par une. C'est la pratique standard en
+entreprise : un VPC ou un cluster EKS bien configuré demande des dizaines de ressources
+(sous-réseaux, tables de routage, groupes de sécurité, rôles IAM...) qu'il est risqué et
+inefficace de réécrire à la main à chaque projet.</p>
+<div class="box remember"><span class="label">À retenir pour l'entretien</span>
+"J'ai épinglé les modules à une version exacte (ex: '20.37.2', pas juste '~&gt; 20.0') plutôt
+qu'une contrainte ouverte, sur recommandation d'un scan de sécurité (Checkov, règle CKV_TF_1) :
+ça évite qu'un `terraform init` ultérieur récupère silencieusement une nouvelle version d'un
+module tiers non revue, un vrai risque de sécurité de la chaîne d'approvisionnement logicielle
+('supply chain')."
+</div>
+
+<h2>4.5 La sécurité de l'infrastructure elle-même</h2>
+<p>Tout le code Terraform a été passé au crible de deux scanners de sécurité spécialisés,
+<strong>tfsec</strong> et <strong>Checkov</strong>, qui vérifient des règles de bonnes
+pratiques (chiffrement activé, accès public restreint, logs d'audit actifs...) automatiquement,
+sans qu'un humain n'ait besoin de tout connaître par cœur. Chaque finding a été soit corrigé,
+soit explicitement documenté comme accepté avec sa justification — voir
+<code>SECURITY_EXCEPTIONS.md</code> dans le dépôt, qui liste par exemple pourquoi l'accès
+public à l'API du cluster est accepté (restreint à une seule IP) alors qu'un scanner le
+signale par défaut comme risqué.</p>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s5">
+<div class="part-number">Partie 5</div>
+<h1>Kubernetes expliqué depuis zéro</h1>
+
+<h2>5.1 Le problème que Kubernetes résout</h2>
+<p>Une application en production doit survivre à des pannes de serveur, s'adapter à des pics
+de trafic, et pouvoir être mise à jour sans interruption de service. Faire tout ça
+manuellement (redémarrer un conteneur planté, ajouter des machines en cas de pic, basculer le
+trafic progressivement vers une nouvelle version) est un travail à temps plein.</p>
+<div class="box def"><span class="label">Définition — Kubernetes</span>
+Kubernetes (souvent abrégé "k8s") est un système qui gère automatiquement un groupe de
+conteneurs sur plusieurs machines : il les redémarre s'ils plantent, les répartit sur les
+machines disponibles, les met à jour progressivement, et peut en ajouter/retirer selon la
+charge. On lui décrit l'état désiré ("je veux 2 exemplaires de mon application qui tournent
+en permanence"), et il se charge de le maintenir vrai en continu.
+</div>
+
+<h2>5.2 Le vocabulaire de base</h2>
+<table>
+<tr><th>Terme</th><th>Définition simple</th></tr>
+<tr><td><strong>Pod</strong></td><td>La plus petite unité déployée par Kubernetes : un ou plusieurs conteneurs qui partagent le même réseau. Dans ce projet, chaque pod contient un seul conteneur (l'application).</td></tr>
+<tr><td><strong>Deployment</strong></td><td>Décrit combien de répliques (copies) d'un pod doivent tourner en permanence, et comment les mettre à jour. Si un pod plante, le Deployment en recrée un automatiquement.</td></tr>
+<tr><td><strong>Service</strong></td><td>Une adresse réseau stable qui redirige le trafic vers les pods actuellement en bonne santé, même s'ils changent (redémarrage, mise à jour) — sans Service, il faudrait suivre manuellement l'IP changeante de chaque pod.</td></tr>
+<tr><td><strong>Namespace</strong></td><td>Un espace de noms qui isole logiquement un groupe de ressources des autres (ex: séparer les applications de deux équipes sur le même cluster).</td></tr>
+<tr><td><strong>Node</strong></td><td>Une machine (ici, une instance EC2) qui fait réellement tourner les pods.</td></tr>
+<tr><td><strong>Cluster</strong></td><td>L'ensemble formé par le control plane (le "cerveau" qui décide) et les nodes (les "muscles" qui exécutent).</td></tr>
+</table>
+
+<h2>5.3 Kustomize : gérer plusieurs environnements sans dupliquer les fichiers</h2>
+<div class="box def"><span class="label">Définition — Kustomize</span>
+Kustomize permet de définir une configuration "de base" (<code>k8s/base/</code>) commune, puis
+des "surcouches" (<code>k8s/overlays/dev</code>, <code>k8s/overlays/prod</code>) qui ne
+décrivent que les <em>différences</em> par environnement (nombre de répliques, quantité de
+ressources CPU/mémoire, tag de l'image), sans jamais dupliquer l'intégralité des fichiers.
+</div>
+<p>Dans ce projet : l'environnement <code>dev</code> tourne avec 1 réplique (rapide, économique)
+tandis que <code>prod</code> en définit 3 avec plus de ressources allouées — sans qu'aucun
+fichier ne soit recopié entre les deux.</p>
+
+<h2>5.4 HorizontalPodAutoscaler : l'auto-scaling</h2>
+<div class="box def"><span class="label">Définition</span>
+Un HPA (HorizontalPodAutoscaler) surveille une métrique (ici, l'utilisation CPU moyenne des
+pods) et ajuste automatiquement le nombre de répliques entre un minimum et un maximum définis,
+pour absorber un pic de charge sans intervention humaine, puis revenir à la normale une fois le
+pic passé.
+</div>
+<p>Il a besoin d'une source de métriques réelles pour fonctionner : <code>metrics-server</code>,
+un composant additionnel du cluster installé séparément (<code>scripts/install_cluster_addons.sh</code>),
+qui a permis de vérifier en conditions réelles (<code>kubectl top pods</code>) l'utilisation CPU
+réelle des pods déployés.</p>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s6">
+<div class="part-number">Partie 6</div>
+<h1>La sécurité du cluster Kubernetes</h1>
+
+<h2>6.1 Le contexte de sécurité du pod (Security Context)</h2>
+<p>Chaque pod de ce projet applique une liste de restrictions, en défense en profondeur (voir
+le rapport du projet "API de paiement" pour ce concept) :</p>
+<table>
+<tr><th>Restriction</th><th>Ce qu'elle empêche</th></tr>
+<tr><td><code>runAsNonRoot: true</code>, <code>runAsUser: 10001</code></td><td>Le conteneur ne peut jamais tourner en administrateur (root), même si l'image le permettrait par erreur</td></tr>
+<tr><td><code>readOnlyRootFilesystem: true</code></td><td>Impossible d'écrire sur le système de fichiers du conteneur — vérifié réellement (Partie 9) : une tentative d'écriture a bien été refusée</td></tr>
+<tr><td><code>allowPrivilegeEscalation: false</code></td><td>Un processus dans le conteneur ne peut jamais obtenir plus de droits que ceux avec lesquels il a démarré</td></tr>
+<tr><td><code>capabilities: drop: ["ALL"]</code></td><td>Retire toutes les capacités Linux avancées (ex: modifier la configuration réseau du système) dont l'application n'a pas besoin</td></tr>
+<tr><td><code>automountServiceAccountToken: false</code></td><td>Le pod ne reçoit même pas de jeton pour parler à l'API Kubernetes, puisqu'il n'en a pas besoin — pas de surface d'attaque inutile</td></tr>
+</table>
+
+<h2>6.2 Pod Security Standards : une deuxième barrière au niveau du cluster</h2>
+<div class="box def"><span class="label">Définition</span>
+Les Pod Security Standards sont une fonctionnalité native de Kubernetes (depuis la version
+1.25) qui peut <strong>refuser catégoriquement</strong> la création d'un pod qui ne respecte
+pas un niveau de sécurité donné ("restricted" étant le plus strict), au niveau du namespace
+tout entier — indépendamment de ce qu'un Deployment individuel essaierait de faire.
+</div>
+<div class="box bug"><span class="label">Vérifié en conditions réelles (effet de bord positif inattendu)</span>
+En testant la connectivité réseau du cluster (Partie 10), une tentative de créer un pod de
+test <code>busybox</code> basique (sans configuration de sécurité) dans le namespace de
+l'application a été <strong>automatiquement rejetée par Kubernetes lui-même</strong>, avec un
+message explicite listant précisément les règles violées (pas de
+<code>runAsNonRoot</code>, pas de <code>seccompProfile</code>...). C'est exactement le
+comportement voulu : même une erreur de configuration future ne pourrait pas introduire un pod
+non sécurisé dans ce namespace.
+</div>
+
+<h2>6.3 NetworkPolicy : le pare-feu interne du cluster</h2>
+<div class="box def"><span class="label">Définition</span>
+Par défaut, dans Kubernetes, absolument tous les pods peuvent communiquer avec tous les autres
+pods du cluster, sans restriction — comme un immeuble de bureaux où toutes les portes seraient
+ouvertes. Une <code>NetworkPolicy</code> définit des règles explicites de qui peut parler à
+qui, sur quel port.
+</div>
+<p>Ce projet applique un modèle "tout refuser par défaut, puis autoriser explicitement" :
+une première règle (<code>default-deny-all</code>) bloque tout, une seconde
+(<code>demo-service-allow</code>) réautorise uniquement le trafic entrant vers l'application,
+depuis le même namespace, sur son port applicatif.</p>
+<div class="box warn"><span class="label">Piège majeur découvert en le testant réellement</span>
+Ce piège est si important et si réel qu'il a sa propre partie dédiée : voir Partie 10.1. En
+résumé : sur EKS, une NetworkPolicy peut être acceptée sans erreur par Kubernetes tout en
+n'ayant <strong>aucun effet réel</strong>, tant qu'une option précise n'est pas activée sur le
+composant réseau du cluster. Ne jamais faire confiance à la présence d'une NetworkPolicy comme
+preuve d'isolation — il faut la <strong>tester activement</strong>.
+</div>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s7">
+<div class="part-number">Partie 7</div>
+<h1>Le pipeline CI/CD GitLab, étape par étape</h1>
+
+<p>Le fichier <code>.gitlab-ci.yml</code> décrit une suite d'étapes ("stages"), chacune
+composée d'un ou plusieurs jobs, qui s'enchaînent automatiquement à chaque changement de code
+poussé sur GitLab.</p>
+
+<table>
+<tr><th>Stage</th><th>Jobs</th><th>Rôle</th></tr>
+<tr><td>1. lint</td><td>lint:terraform, lint:dockerfile</td><td>Vérifie le style et la syntaxe du code avant même de le tester fonctionnellement</td></tr>
+<tr><td>2. test</td><td>test:app</td><td>Exécute les tests automatisés de l'application (pytest)</td></tr>
+<tr><td>3. security-code</td><td>security:secrets, security:sast, security:iac</td><td>Scanne le code source lui-même, avant toute construction (voir Partie 8)</td></tr>
+<tr><td>4. build</td><td>build:image</td><td>Construit l'image Docker et la pousse sur ECR</td></tr>
+<tr><td>5. security-artifact</td><td>security:container-scan, security:k8s-manifests</td><td>Scanne ce qui a été réellement construit : l'image et les manifestes Kubernetes rendus</td></tr>
+<tr><td>6. deploy</td><td>deploy:dev (auto), deploy:prod (manuel)</td><td>Déploie sur le cluster — automatiquement en dev, jamais sans validation humaine en prod</td></tr>
+</table>
+
+<h2>7.1 Pourquoi la validation humaine obligatoire en production ?</h2>
+<pre>deploy:prod:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual</pre>
+<div class="box remember"><span class="label">À retenir pour l'entretien</span>
+"Le déploiement en développement est automatique dès que les tests et les scans de sécurité
+passent, mais le déploiement en production nécessite un clic explicite d'un humain dans
+l'interface GitLab (<code>when: manual</code>). Aucune automatisation, aussi bien testée
+soit-elle, ne devrait pouvoir mettre en production sans qu'un humain n'ait le dernier mot — un
+principe de sécurité autant que de bon sens opérationnel."
+</div>
+
+<h2>7.2 Un piège d'images Docker à connaître : les ENTRYPOINT figés</h2>
+<div class="box warn"><span class="label">Piège rencontré et corrigé en écrivant ce pipeline</span>
+Plusieurs images Docker officielles d'outils de sécurité (gitleaks, tfsec, trivy) fixent leur
+<code>ENTRYPOINT</code> directement sur leur binaire principal. Résultat : la commande qu'on
+écrit dans <code>script:</code> (ex: <code>gitleaks detect ...</code>) est alors passée
+<em>en argument</em> à ce binaire déjà lancé, au lieu d'être exécutée normalement — provoquant
+une erreur du type <code>unknown command "sh" for "gitleaks"</code>. La solution, appliquée à
+chacun de ces jobs : ajouter <code>entrypoint: [""]</code> dans la définition de l'image, pour
+neutraliser cet ENTRYPOINT et laisser GitLab exécuter la commande normalement. Ce projet a
+vérifié ce comportement en inspectant directement chaque image
+(<code>docker inspect ... --format '{{"{{.Config.Entrypoint}}"}}'</code>) plutôt que de
+deviner.
+</div>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s8">
+<div class="part-number">Partie 8</div>
+<h1>Les scans de sécurité automatisés</h1>
+
+<table>
+<tr><th>Type de scan</th><th>Outil</th><th>Ce qu'il vérifie</th><th>Quand</th></tr>
+<tr><td>Secrets</td><td>Gitleaks</td><td>Une clé API, un mot de passe oublié par erreur dans le code source</td><td>Avant toute construction</td></tr>
+<tr><td>SAST (analyse statique)</td><td>Semgrep</td><td>Des patterns de code dangereux (injection, désérialisation non sûre...) sans exécuter le code</td><td>Avant toute construction</td></tr>
+<tr><td>IaC (infrastructure)</td><td>tfsec, Checkov</td><td>Des erreurs de configuration cloud dangereuses (chiffrement absent, accès public non voulu...)</td><td>Sur le code Terraform et les manifestes Kubernetes</td></tr>
+<tr><td>Conteneur</td><td>Trivy</td><td>Des vulnérabilités connues (CVE) dans les paquets système et les librairies de l'image construite</td><td>Après la construction de l'image</td></tr>
+
+</table>
+
+<h2>8.1 SAST : qu'est-ce que ça regarde vraiment ?</h2>
+<div class="box def"><span class="label">Définition — SAST (Static Application Security Testing)</span>
+Le SAST analyse le code source <strong>sans l'exécuter</strong>, à la recherche de patterns
+connus pour être dangereux (ex: construire une requête SQL en concaténant directement une
+entrée utilisateur). C'est complémentaire, pas concurrent, du DAST (Dynamic Application
+Security Testing) qui, lui, teste une application en cours d'exécution en lui envoyant de
+vraies requêtes.
+</div>
+
+<h2>8.2 La politique "ignore-unfixed" pour le scan de conteneur</h2>
+<div class="box warn"><span class="label">Une décision de politique de sécurité, pas juste un réglage technique</span>
+Scanner une image Docker révèle presque toujours des vulnérabilités dans des paquets système
+qui n'ont, à un instant donné, pas encore de correctif publié. Bloquer systématiquement le
+pipeline sur ces vulnérabilités "non corrigeables" reviendrait à ne plus jamais pouvoir
+déployer. Ce projet utilise <code>trivy image --ignore-unfixed</code> : seules les
+vulnérabilités pour lesquelles un correctif existe réellement font échouer le pipeline. Sur
+l'image réellement construite dans ce projet, ce scan (exécuté en local avant même le
+pipeline) a trouvé <strong>zéro</strong> vulnérabilité CRITICAL/HIGH corrigeable.
+</div>
+
+<h2>8.3 Le triage : ne pas tout corriger aveuglément</h2>
+<p>Un vrai travail de sécurité ne consiste pas à faire disparaître 100% des alertes d'un
+scanner à tout prix, mais à évaluer chaque finding et choisir consciemment : corriger,
+accepter (avec justification écrite), ou parfois reconfigurer l'outil. Ce projet documente
+explicitement cette démarche dans <code>SECURITY_EXCEPTIONS.md</code> — par exemple,
+l'absence de journalisation d'accès sur le bucket S3 de l'état Terraform est un risque accepté
+(bucket temporaire, détruit en fin de test), alors que l'absence de logs d'audit du cluster
+EKS a, elle, été corrigée (risque jugé plus important, coût de correction faible).</p>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s9">
+<div class="part-number">Partie 9</div>
+<h1>Le déploiement réel : ce qui a été fait, pour de vrai</h1>
+
+<p>Contrairement à un exercice purement théorique, ce projet a été déployé sur un vrai compte
+AWS. Voici, dans l'ordre exact, ce qui a été fait et vérifié (preuves complètes dans
+<code>reports/deployment_evidence.txt</code>) :</p>
+
+<ol>
+<li><strong>Bootstrap</strong> : création du bucket S3 + table DynamoDB pour l'état Terraform partagé.</li>
+<li><strong>Infrastructure</strong> : <code>terraform apply</code> a créé 62 ressources AWS réelles (VPC, sous-réseaux, NAT Gateway, cluster EKS, node group, rôles IAM, dépôt ECR...).</li>
+<li><strong>Connexion</strong> : <code>aws eks update-kubeconfig</code> a connecté <code>kubectl</code> au vrai cluster ; <code>kubectl get nodes</code> a confirmé un nœud <code>Ready</code>.</li>
+<li><strong>Add-on</strong> : installation de <code>metrics-server</code> via Helm, pour permettre l'autoscaling.</li>
+<li><strong>Construction et déploiement</strong> : l'image de l'application construite, poussée sur ECR, puis déployée sur le cluster via Kustomize.</li>
+<li><strong>Vérification fonctionnelle</strong> : <code>kubectl port-forward</code> + <code>curl</code> ont confirmé que l'application répondait réellement, avec 2 répliques actives (<code>2/2 Running</code>).</li>
+<li><strong>Vérification de sécurité</strong> : utilisateur non-root confirmé (<code>id</code> → uid 10001), écriture bloquée sur le système de fichiers, isolation réseau testée (voir Partie 10).</li>
+<li><strong>Destruction complète</strong> : <code>terraform destroy</code>, puis vérification manuelle qu'il ne restait plus aucune ressource facturée à l'heure (<code>aws eks list-clusters</code>, <code>aws ec2 describe-nat-gateways</code> — tous deux vides).</li>
+</ol>
+
+<div class="box remember"><span class="label">À retenir pour l'entretien</span>
+"Je peux montrer les commandes exactes et leurs résultats réels que j'ai obtenus — ce ne sont
+pas des captures d'écran d'un tutoriel, ce sont mes propres logs de déploiement, conservés dans
+le dépôt. Je peux notamment montrer que l'utilisateur du conteneur en cours d'exécution était
+bien non-root (uid 10001) et que le système de fichiers était bien en lecture seule, vérifiés
+par une commande exécutée directement dans le pod en cours de fonctionnement."
+</div>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s10">
+<div class="part-number">Partie 10</div>
+<h1>Les deux vrais bugs trouvés et corrigés en direct</h1>
+
+<p>C'est la partie la plus précieuse de ce rapport pour un entretien : la preuve qu'un
+déploiement réel révèle des problèmes qu'aucune relecture de code, aussi attentive soit-elle,
+n'aurait trouvés.</p>
+
+<h2>10.1 Les NetworkPolicy n'étaient pas appliquées par défaut</h2>
+<div class="box bug"><span class="label">Le problème constaté</span>
+Après le premier déploiement, un pod de test placé volontairement dans un <em>autre</em>
+namespace arrivait quand même à joindre l'application, malgré une <code>NetworkPolicy</code>
+de refus par défaut bien présente et acceptée sans erreur par Kubernetes
+(<code>kubectl get networkpolicy</code> la listait normalement, comme si tout allait bien).
+</div>
+<p><strong>Diagnostic :</strong> le composant réseau par défaut d'EKS (Amazon VPC CNI)
+n'active pas, par défaut, l'application réelle des <code>NetworkPolicy</code>. Elles sont
+acceptées par l'API Kubernetes (aucune erreur, aucun avertissement visible) mais restent
+lettre morte tant qu'une option précise, <code>enableNetworkPolicy</code>, n'est pas activée
+sur l'add-on <code>vpc-cni</code> du cluster.</p>
+<p><strong>Correction :</strong> ajout d'un bloc <code>cluster_addons</code> dans le code
+Terraform, configurant explicitement <code>vpc-cni</code> avec cette option activée. Après
+avoir réappliqué ce changement (une mise à jour d'add-on, pas une recréation du cluster —
+rapide et peu coûteuse), le même test de pod inter-namespace a échoué en timeout, confirmant
+l'isolation réelle. Vérifié aussi via l'apparition d'objets <code>PolicyEndpoint</code>
+(ressources internes créées par le contrôleur une fois activé) qui n'existaient pas avant la
+correction.</p>
+<div class="box remember"><span class="label">À retenir pour l'entretien</span>
+"J'ai appris qu'il ne faut jamais faire confiance à la simple présence d'une configuration de
+sécurité déclarée — il faut activement essayer de contourner la protection pour prouver
+qu'elle fonctionne, exactement comme on testerait une serrure en essayant de l'ouvrir plutôt
+qu'en vérifiant juste qu'elle est vissée à la porte."
+</div>
+
+<h2>10.2 Une image construite pour la mauvaise architecture de processeur</h2>
+<div class="box bug"><span class="label">Le problème constaté</span>
+Après le déploiement, les pods de l'application entraient en <code>CrashLoopBackOff</code>
+(redémarrages en boucle). Les logs du conteneur affichaient un message énigmatique :
+<code>exec /usr/local/bin/uvicorn: exec format error</code>.
+</div>
+<p><strong>Diagnostic :</strong> l'ordinateur utilisé pour construire l'image est un Mac
+Apple Silicon (architecture <strong>arm64</strong>). Par défaut,
+<code>docker build</code> construit une image pour l'architecture de la machine qui
+construit. Or, les nœuds EKS standards tournent en <strong>amd64</strong> (x86_64) — deux
+familles de processeurs qui n'exécutent pas le même langage machine, un peu comme essayer de
+lire un livre écrit dans un alphabet que l'ordinateur ne reconnaît pas.</p>
+<p><strong>Correction :</strong> reconstruction de l'image avec
+<code>docker buildx build --platform linux/amd64</code>, en utilisant l'émulation
+<strong>QEMU</strong> pour construire une image de l'architecture cible depuis une machine
+d'une architecture différente. Le script de déploiement du projet
+(<code>scripts/deploy.sh</code>) intègre maintenant systématiquement ce flag, avec un
+commentaire expliquant pourquoi.</p>
+<div class="box remember"><span class="label">À retenir pour l'entretien</span>
+"C'est un piège classique et de plus en plus fréquent avec la popularité des Mac Apple
+Silicon dans les équipes de développement, alors que la quasi-totalité des serveurs cloud
+tournent encore en x86_64. Je sais maintenant reconnaître ce message d'erreur précis ('exec
+format error') et le corriger immédiatement, plutôt que de chercher pendant une heure du côté
+applicatif un bug qui n'existe pas."
+</div>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s11">
+<div class="part-number">Partie 11</div>
+<h1>Maîtriser le coût d'une infrastructure cloud</h1>
+
+<h2>11.1 Le cloud coûte de l'argent à chaque heure, pas à l'usage applicatif</h2>
+<p>Contrairement à un ordinateur personnel déjà payé, une ressource cloud (un cluster, une
+machine, une passerelle réseau) facture chaque heure où elle existe, qu'elle serve à quelque
+chose ou non. Une infrastructure oubliée allumée peut coûter des centaines d'euros en quelques
+semaines sans qu'aucune requête ne l'ait jamais atteinte.</p>
+
+<h2>11.2 Les décisions prises pour maîtriser le coût de ce test</h2>
+<table>
+<tr><th>Décision</th><th>Effet</th></tr>
+<tr><td>Instance Spot plutôt qu'à la demande</td><td>Jusqu'à ~70% moins cher pour une charge non-critique et de courte durée</td></tr>
+<tr><td>Une seule NAT Gateway (pas une par zone de disponibilité)</td><td>Réduit le coût réseau d'environ moitié, au prix d'un point de défaillance unique inacceptable en production mais négligeable pour un test de quelques heures</td></tr>
+<tr><td>Alerte de budget AWS (5$/10$)</td><td>Notification automatique par email si la dépense dépasse un seuil, indépendamment de toute action manuelle</td></tr>
+<tr><td>Destruction systématique après vérification</td><td>La protection la plus importante : aucune ressource n'a été laissée tourner "au cas où"</td></tr>
+</table>
+
+<h2>11.3 Comment vérifier qu'il ne reste vraiment plus rien</h2>
+<p>Une bonne pratique après un <code>terraform destroy</code> : ne pas se contenter de croire
+que la commande a réussi, mais <strong>vérifier indépendamment</strong> auprès du fournisseur
+cloud lui-même. Ce projet a vérifié, après destruction :</p>
+<pre>aws eks list-clusters --region eu-west-3          # -> []
+aws ec2 describe-nat-gateways ... --filter state=available   # -> []
+aws ec2 describe-vpcs --filters "Name=tag:Project,..."        # -> []</pre>
+<div class="box remember"><span class="label">À retenir pour l'entretien</span>
+"La maîtrise des coûts fait partie intégrante du travail DevOps, pas un détail administratif à
+part. J'ai mis en place une alerte de budget en amont, choisi une architecture volontairement
+économique pour un test court, et surtout vérifié activement — pas juste supposé — que la
+destruction avait bien tout supprimé, directement auprès de l'API AWS plutôt que de faire
+confiance au message de succès de Terraform seul."
+</div>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s12">
+<div class="part-number">Partie 12</div>
+<h1>Git et GitHub</h1>
+<p>Même démarche que pour les deux autres projets de ce portfolio : dépôt initialisé,
+<code>.gitignore</code> excluant les états Terraform locaux, les plans (<code>*.tfplan</code>,
+qui peuvent révéler la structure interne des ressources), et tout fichier de configuration
+kubectl contenant un certificat.</p>
+<div class="box cv-link"><span class="label">Un choix délibéré : GitHub plutôt que GitLab pour héberger ce dépôt</span>
+Ta ligne de CV demande spécifiquement "GitLab CI/CD". Le fichier <code>.gitlab-ci.yml</code>
+de ce projet est écrit en syntaxe GitLab CI réelle et correcte (vérifiée en partie via
+<code>gitlab-ci-local</code>, un simulateur qui exécute réellement certains jobs dans des
+conteneurs Docker identiques à ceux qu'utiliserait un vrai runner GitLab). Il est hébergé sur
+GitHub ici pour rester cohérent avec les deux autres projets de ce portfolio ; il est
+directement prêt à être pousuivi sur un vrai projet GitLab si besoin, sans aucune
+modification.
+</div>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s13">
+<div class="part-number">Partie 13</div>
+<h1>Le lien avec ton CV, phrase par phrase</h1>
+
+<p>Ta ligne de CV : <em>"Mise en place d'un pipeline CI/CD et déploiement d'une application
+conteneurisée avec contrôles de sécurité."</em></p>
+
+<table>
+<tr><th>Mot-clé du CV</th><th>Ce que tu peux dire</th></tr>
+<tr><td>"AWS"</td><td>"J'ai provisionné une vraie infrastructure sur AWS : VPC, cluster EKS, registre ECR — testée en conditions réelles, pas seulement écrite."</td></tr>
+<tr><td>"Docker"</td><td>"Image construite en multi-stage, utilisateur non-root, et j'ai résolu un vrai problème de compatibilité d'architecture CPU (arm64 vs amd64) rencontré en la déployant."</td></tr>
+<tr><td>"Kubernetes"</td><td>"Déploiement avec Kustomize pour gérer plusieurs environnements, autoscaling basé sur l'utilisation CPU réelle, et sécurité renforcée (Pod Security Standards, NetworkPolicy, contexte de sécurité restrictif) — vérifiée activement, pas juste déclarée."</td></tr>
+<tr><td>"GitLab CI/CD"</td><td>"Pipeline complet en 6 étapes suivant le principe 'shift left' : chaque contrôle de sécurité tourne le plus tôt possible, avant même de construire l'image."</td></tr>
+<tr><td>"Terraform"</td><td>"Infrastructure versionnée avec un état distant partagé (S3 + DynamoDB), modules communautaires épinglés à une version exacte, et code passé au crible de deux scanners de sécurité (tfsec, Checkov)."</td></tr>
+<tr><td>"contrôles de sécurité"</td><td>"SAST, scan de secrets, scan de vulnérabilités conteneur, scan d'infrastructure — avec une politique claire sur ce qui bloque le pipeline (vulnérabilités corrigeables uniquement) et ce qui est documenté comme risque accepté."</td></tr>
+</table>
+
+<div class="box cv-link"><span class="label">Une phrase d'ouverture possible en entretien</span>
+"C'est le seul de mes trois projets que j'ai réellement déployé sur un vrai compte cloud plutôt
+que de le laisser purement théorique. Ça m'a forcé à découvrir et corriger deux vrais problèmes
+que je n'aurais jamais anticipés en me contentant d'écrire le code — je trouve que c'est ce qui
+distingue vraiment un projet DevOps 'qui marche sur le papier' d'un projet DevOps qui a
+vraiment tourné."
+</div>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s14">
+<div class="part-number">Partie 14</div>
+<h1>Limites du projet et pistes d'amélioration réelles</h1>
+
+<table>
+<tr><th>Limite</th><th>Ce qu'on ferait en vrai</th></tr>
+<tr><td>Pas d'exposition publique (Ingress/Load Balancer)</td><td>Documentée et écrite (<code>k8s/examples/ingress-example.yaml</code>) mais non déployée, pour limiter le coût et la durée du test.</td></tr>
+<tr><td>Un seul environnement testé en conditions réelles</td><td>L'overlay <code>prod</code> est écrit et validé statiquement (scan de sécurité, rendu Kustomize) mais jamais réellement déployé.</td></tr>
+<tr><td>Pipeline GitLab non exécuté sur un vrai projet hébergé</td><td>Validé localement (syntaxe, exécution de plusieurs jobs via un simulateur) mais jamais lancé sur un vrai gitlab.com.</td></tr>
+<tr><td>Scan ECR natif non concluant</td><td><code>docker buildx</code> génère par défaut un index multi-plateforme incompatible avec le scan basique d'ECR (voir <code>reports/lessons_learned.md</code>) — contourné ici par un scan Trivy local, à corriger en désactivant la provenance (<code>--provenance=false</code>) pour un usage réel.</td></tr>
+<tr><td>Un seul nœud, pas de haute disponibilité multi-zone</td><td>Choix volontaire de coût pour un test court ; une vraie production répartirait les nœuds sur plusieurs zones de disponibilité.</td></tr>
+</table>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s15">
+<div class="part-number">Partie 15</div>
+<h1>Questions probables en entretien + éléments de réponse</h1>
+
+<p><strong>Q : "Racontez-moi un problème que vous avez rencontré et comment vous l'avez résolu."</strong><br>
+R : Partie 10 — les deux bugs réels sont exactement faits pour cette question. Raconte le
+diagnostic (comment tu as compris la cause), pas seulement la solution.</p>
+
+<p><strong>Q : "Comment gérez-vous les coûts d'une infrastructure cloud ?"</strong><br>
+R : Partie 11 — alerte de budget, instances Spot, destruction systématique, vérification
+indépendante après coup.</p>
+
+<p><strong>Q : "Comment sécurisez-vous un pipeline CI/CD ?"</strong><br>
+R : Partie 7-8 — "shift left", plusieurs types de scans complémentaires, politique claire sur
+ce qui bloque vs ce qui est accepté.</p>
+
+<p><strong>Q : "Pourquoi Terraform plutôt que de cliquer dans la console AWS ?"</strong><br>
+R : Partie 4.1 — reproductibilité, traçabilité, revue de code possible sur l'infrastructure
+elle-même.</p>
+
+<p><strong>Q : "Qu'est-ce qu'une NetworkPolicy et comment savez-vous qu'elle fonctionne ?"</strong><br>
+R : Partie 6.3 et 10.1 — définition, puis le piège réel découvert, qui montre que tu sais
+qu'il faut tester activement, pas juste déclarer.</p>
+
+<p><strong>Q : "Quelle est la différence entre CI et CD ?"</strong><br>
+R : Partie 3.5 — définition claire, avec l'exemple concret du <code>when: manual</code> pour
+la production dans ce projet.</p>
+
+<p><strong>Q : "Que feriez-vous différemment avec plus de temps ?"</strong><br>
+R : Partie 14 — cite l'Ingress/Load Balancer et la haute disponibilité multi-zone en priorité.</p>
+</div>
+
+<!-- ================================================================ -->
+<div class="part" id="s16">
+<div class="part-number">Partie 16</div>
+<h1>Glossaire complet de tous les termes techniques</h1>
+
+<dl class="glossaire">
+<dt>Add-on (EKS)</dt><dd>Composant logiciel géré du cluster (ex: vpc-cni, coredns), dont AWS peut gérer la version et la configuration.</dd>
+<dt>AWS (Amazon Web Services)</dt><dd>Plateforme de cloud computing d'Amazon.</dd>
+<dt>Backend (Terraform)</dt><dd>L'endroit où Terraform stocke son fichier d'état — ici, un bucket S3 distant plutôt qu'un fichier local.</dd>
+<dt>CI/CD</dt><dd>Intégration Continue / Déploiement Continu : automatisation des tests et de la mise en production à chaque changement de code.</dd>
+<dt>Cluster (Kubernetes)</dt><dd>L'ensemble formé par le control plane et les nœuds qui font tourner les applications.</dd>
+<dt>CNI (Container Network Interface)</dt><dd>Le composant qui gère la mise en réseau des pods dans un cluster Kubernetes.</dd>
+<dt>Conteneur</dt><dd>Environnement d'exécution isolé et reproductible embarquant une application et ses dépendances.</dd>
+<dt>Deployment (Kubernetes)</dt><dd>Ressource qui décrit combien de répliques d'un pod doivent tourner et comment les mettre à jour.</dd>
+<dt>DevOps / DevSecOps</dt><dd>Pratiques rapprochant développement et exploitation, la seconde intégrant la sécurité à chaque étape.</dd>
+<dt>Docker</dt><dd>Outil de création et d'exécution de conteneurs.</dd>
+<dt>ECR (Elastic Container Registry)</dt><dd>Service AWS de stockage d'images Docker.</dd>
+<dt>EKS (Elastic Kubernetes Service)</dt><dd>Service AWS de cluster Kubernetes managé.</dd>
+<dt>État Terraform (state)</dt><dd>Fichier qui fait correspondre le code Terraform aux ressources cloud réellement créées.</dd>
+<dt>HPA (HorizontalPodAutoscaler)</dt><dd>Ajuste automatiquement le nombre de répliques d'un Deployment selon une métrique de charge.</dd>
+<dt>IaC (Infrastructure as Code)</dt><dd>Décrire l'infrastructure dans des fichiers versionnés plutôt que de la configurer manuellement.</dd>
+<dt>IAM (Identity and Access Management)</dt><dd>Service AWS de gestion des identités et des permissions.</dd>
+<dt>Ingress (Kubernetes)</dt><dd>Ressource qui expose un service à l'extérieur du cluster, généralement via un load balancer.</dd>
+<dt>Kubernetes</dt><dd>Système d'orchestration qui gère automatiquement des conteneurs sur plusieurs machines.</dd>
+<dt>Kustomize</dt><dd>Outil qui permet de décliner une configuration Kubernetes de base en plusieurs variantes par environnement.</dd>
+<dt>Module (Terraform)</dt><dd>Bloc de code Terraform réutilisable, souvent partagé par la communauté (ex: module VPC).</dd>
+<dt>Namespace (Kubernetes)</dt><dd>Espace de noms qui isole logiquement des ressources au sein d'un même cluster.</dd>
+<dt>NAT Gateway</dt><dd>Composant réseau qui permet à des machines dans un sous-réseau privé d'accéder à Internet sans y être directement exposées.</dd>
+<dt>NetworkPolicy</dt><dd>Règle qui restreint quels pods peuvent communiquer entre eux et sur quels ports.</dd>
+<dt>Node (Kubernetes)</dt><dd>Une machine qui fait réellement tourner des pods.</dd>
+<dt>Pod</dt><dd>La plus petite unité déployable dans Kubernetes, contenant un ou plusieurs conteneurs.</dd>
+<dt>Pod Security Standard</dt><dd>Fonctionnalité native de Kubernetes qui peut refuser la création de pods ne respectant pas un niveau de sécurité donné.</dd>
+<dt>SAST (Static Application Security Testing)</dt><dd>Analyse du code source à la recherche de failles, sans l'exécuter.</dd>
+<dt>Service (Kubernetes)</dt><dd>Adresse réseau stable qui redirige vers les pods actuellement disponibles.</dd>
+<dt>Spot (instance)</dt><dd>Capacité de calcul AWS louée à prix réduit, avec le risque qu'elle soit récupérée par AWS avec un court préavis — adapté aux charges non-critiques.</dd>
+<dt>Terraform</dt><dd>Outil d'infrastructure-as-code multi-fournisseurs cloud.</dd>
+<dt>Trivy</dt><dd>Outil de scan de vulnérabilités pour les images de conteneurs et le code.</dd>
+<dt>VPC (Virtual Private Cloud)</dt><dd>Réseau privé virtuel isolé au sein du cloud d'un fournisseur.</dd>
+</dl>
+</div>
+
+</body>
+</html>
